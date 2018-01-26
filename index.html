@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<style type="text/css">
+.wrapper{
+		margin: 0 auto;
+		margin: 200px 200px 200px 200px;
+
+
+	}
+body{
+    width: 600px;
+    margin: 0 auto;
+        }
+
+		.loginn{
+			
+			height: 300px;
+			width: 400px;
+			
+
+		}
+.a{
+	display: none;
+	width: 700px;
+	margin: 0 auto;
+}
+.head{
+	background-color: powderblue;
+	height:40px;
+	width: 550px;
+	margin: 0 auto;
+	font-size: 30px;
+  padding-left: 29px;
+	
+}
+li{
+	list-style-type: none;
+ 
+}
+.body{
+	 border: 2px solid #dedede;
+	/*background-color: white;*/ 
+	height: 450px;
+	width: 550px;
+	margin: 0 auto;
+}
+.containerr {
+	width: 550px;
+  padding: 20px;
+  overflow: auto;
+    
+}
+.footer{
+     background-color: #ccc;
+	height:32px;
+	width: 550px;
+	margin: 0 auto;
+	
+}
+.input{
+	width: 480px;
+  border-radius: 9px;
+}
+button{
+	width: 60px;
+	padding: 3px 10px;
+    border-radius: 5px;
+	margin-top: 1px;
+     
+
+}
+.chatmsg{  
+        border-radius: 15px;
+        border: 2px solid #dedede;
+        padding:15px;
+        overflow: auto;
+        margin: 2px;
+        color: #585858;  
+        background-color: #E6E6E6;
+      }
+ #now{
+        font-size: 90%;
+        color:#A4A4A4;
+        position: relative;
+        top: 0;
+        right: 0;
+        float: right;
+      }
+ #logout{
+        background-color: powderblue;
+        float: right;
+        font-size: 17px;
+        width:153px;
+        padding: 7px 1px; 
+ }     
+      h4{
+        display: inline-block;
+        text-align:  left;
+        margin-top: 0px;
+        margin-bottom: 0px;
+
+      } 
+      p{
+        margin-bottom: 0px;
+
+
+      }
+
+
+</style>
+</head>
+<body>
+<div>
+
+      <div class="wrapper">
+
+          <div class="Loginn">
+            <label for="usr">Name:</label>
+          	<input type="text" name="username" class="form-control">
+            <label for="pwd">Password:</label>
+          	<input type="password" name = "password"class="form-control"><br>
+          	<button type="submit" id="button_register"class="btn btn-default">Register</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          	<button type="submit" id="button_login" class="btn btn-default">Login</button>
+          </div>
+    	
+
+      </div>
+
+  <div class="a">
+     <div class="head"> FSE Chat Room 
+     <button type="submit" id="logout" >Leave Chat Room</button></div>
+      <div class="body">
+   	     <div class="containerr">
+
+   	   
+  
+  
+        
+         </div>
+       </div>
+     <div class="footer">
+   
+          <input type="text"  placeholder="Enter here" class="input" >
+	       <button type="submit" class="submit" >Post</button>
+	
+	
+      </div>
+ </div>
+</div>
+</body>
+<script >
+    
+      $(document).ready(function() {
+	var socket = io.connect('http://localhost:8090');
+       
+       // sending the credentials for registering to server
+
+       $("#button_register").click(function(){
+          var uname = $(".form-control").first().val();
+          var pass= $(".form-control").last().val();
+          socket.emit('register',{name: uname, password: pass} );
+          $(".form-control").first().val("");
+          $(".form-control").last().val("");
+      
+
+        });
+       
+       // sending credentials for checking login details to server
+
+        $("#button_login").click(function(){
+           var uname = $(".form-control").first().val();
+           var pass= $(".form-control").last().val();
+           socket.emit('login',{name: uname, password: pass});
+           $(".form-control").first().val("");
+           $(".form-control").last().val("");
+
+           
+        });
+
+        $("#logout").click(function(){
+         $(".a").hide();
+         $(".wrapper").show();
+         location.reload();
+      
+
+        });
+
+
+
+        
+      // posting messages
+        
+    
+	$('.submit').click(function(){
+		var now = new Date();
+        var time = Time(now);
+       var message = $('.input').val();
+      
+       socket.emit('messages',message,now);
+       $('.input').val("");
+       
+	});
+      
+	// socket.on('text_msg',function(data){
+	// 	alert(data.msg);
+	
+
+	// });
+
+	// joining the client on success
+	socket.on('success',function(){
+		socket.emit('join');
+		$(".a").show();
+		$(".wrapper").hide();
+	});
+
+
+	socket.on('failure',function(){
+		alert("Your credentials are wrong");
+	});
+	socket.on('invalidUsername',function(){
+		alert("Please select another username");
+	});
+
+      // inserting the messages from client
+	socket.on('messages',function(data){
+		
+   var timeObject = new Date(data.time);
+    console.log(data.time);
+    var time = Time(timeObject);
+
+    
+
+		var chatmsg= $('<h4>'+data.username+'</h4>').text(data.username);
+
+		$(".containerr").append($('<li class="chatmsg">')
+                    .append(chatmsg)
+                    .append($('<p id = "now">').text(time))
+                    .append($('<p>').text(data.message))
+                    );// insertmessage(data);
+
+		
+
+	});
+
+
+	        function Time(now){
+           var hours = now.getHours();
+           var ampm;
+           if (hours >= 12){
+           	ampm = 'PM';
+           }
+           else{
+           	ampm = 'AM';
+           }
+           if (hours == 0){hours = 12;}
+           if (hours > 12){hours -= 12;}
+                   
+           var minutes = now.getMinutes(); 
+           if (minutes < 10){minutes = '0'+minutes;}
+           var month = now.getMonth();
+           console.log(month);
+           var time = (now.getMonth()+1) + "." + now.getDate() + "." + 
+                     now.getFullYear() + " " + hours + ":" + 
+                     minutes + " " + ampm;
+           return time;         
+        }
+
+});
+
+
+</script>
+</html>
